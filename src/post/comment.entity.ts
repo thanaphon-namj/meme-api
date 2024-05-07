@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Post } from 'src/post/post.entity';
+import { Post } from './post.entity';
 
 @Entity({ name: 'Comment' })
 export class Comment {

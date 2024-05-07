@@ -1,33 +1,21 @@
-import { CompleteMultipartUploadOutput, S3Client } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
+import { BlobServiceClient } from '@azure/storage-blob';
 import { Injectable } from '@nestjs/common';
-import { Readable } from 'stream';
 
 @Injectable()
 export class UploadService {
-  uploadFile(
-    file: Express.Multer.File,
-  ): Promise<CompleteMultipartUploadOutput> {
-    const s3 = new S3Client({
-      region: process.env.AWS_DEFAULT_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
+  async uploadFile(file: Express.Multer.File, id: string): Promise<string> {
+    const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
 
-    const fileStream = Readable.from(file.buffer);
+    const blobServiceClient =
+      BlobServiceClient.fromConnectionString(connectionString);
+    const containerClient = blobServiceClient.getContainerClient(containerName);
 
-    const upload = new Upload({
-      client: s3,
-      params: {
-        Bucket: process.env.AWS_BUCKET,
-        Key: file.originalname,
-        Body: fileStream,
-        ACL: 'public-read',
-      },
-    });
+    const fileExtension = file.originalname.split('.').pop();
+    const fileName = `${id}.${fileExtension}`;
+    const blockBlobClient = containerClient.getBlockBlobClient(fileName);
 
-    return upload.done();
+    await blockBlobClient.uploadData(file.buffer);
+    return blockBlobClient.url;
   }
 }

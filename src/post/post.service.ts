@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { generateEntityId } from '../utils';
 import { Comment } from './comment.entity';
 import { Post } from './post.entity';
 import { UploadService } from './upload.service';
@@ -15,16 +16,17 @@ export class PostService {
     private commentRepository: Repository<Comment>,
   ) {}
 
-  async create(file: Express.Multer.File): Promise<Post> {
-    const data = await this.uploadService.uploadFile(file);
-    return this.postRepository.save({ imageUrl: data.Location });
+  async create(file: Express.Multer.File): Promise<any> {
+    const id = generateEntityId();
+    const imageUrl = await this.uploadService.uploadFile(file, id);
+    return this.postRepository.save({ id, imageUrl });
   }
 
   findAll(): Promise<Post[]> {
     return this.postRepository.find();
   }
 
-  findById(id: number): Promise<Post> {
+  findById(id: string): Promise<Post> {
     return this.postRepository.findOne({
       where: {
         id,
@@ -33,27 +35,26 @@ export class PostService {
     });
   }
 
-  update(id: number, payload: string): Promise<any> {
+  update(id: string, payload: string): Promise<any> {
     return this.postRepository.update(id, {
       caption: payload,
     });
   }
 
-  async addLike(id: number): Promise<Post> {
-    const post = await this.postRepository.findOneBy({ id });
-    post.likes = post.likes + 1;
-    return this.postRepository.save(post);
+  async delete(id: string): Promise<any> {
+    await this.commentRepository.delete({ post: { id } });
+    return this.postRepository.delete(id);
   }
 
-  async removeLike(id: number): Promise<Post> {
-    const post = await this.postRepository.findOneBy({ id });
-    if (post.likes > 0) {
-      post.likes = post.likes - 1;
-    }
-    return this.postRepository.save(post);
+  async addLike(id: string): Promise<any> {
+    return this.postRepository.increment({ id }, 'likes', 1);
   }
 
-  async createComment(id: number, payload: string): Promise<Comment> {
+  async deleteLike(id: string): Promise<any> {
+    return this.postRepository.decrement({ id }, 'likes', 1);
+  }
+
+  async createComment(id: string, payload: string): Promise<Comment> {
     const post = await this.postRepository.findOneBy({ id });
     const comment = new Comment();
     comment.text = payload;
@@ -61,7 +62,7 @@ export class PostService {
     return this.commentRepository.save(comment);
   }
 
-  async removeComment(id: number, commentId: number): Promise<any> {
+  async deleteComment(id: string, commentId: number): Promise<any> {
     return this.commentRepository.delete({ id: commentId, post: { id } });
   }
 }

@@ -10,6 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { shuffle } from '../utils';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostService } from './post.service';
@@ -33,21 +34,21 @@ export class PostController {
     const data = await this.postService.findAll();
     return {
       success: true,
-      data,
+      data: shuffle(data),
     };
   }
 
   @Get(':id')
-  async getById(@Param('id') id: number): Promise<any> {
+  async getById(@Param('id') id: string): Promise<any> {
     const data = await this.postService.findById(id);
     return {
-      success: true,
+      success: data !== null,
       data,
     };
   }
 
   @Patch(':id')
-  update(@Param('id') id: number, @Body() updatePostDto: UpdatePostDto): any {
+  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto): any {
     try {
       this.postService.update(id, updatePostDto.caption);
       return {
@@ -60,19 +61,51 @@ export class PostController {
     }
   }
 
+  @Delete(':id')
+  delete(@Param('id') id: string): any {
+    try {
+      this.postService.delete(id);
+      return {
+        success: true,
+      };
+    } catch (e) {
+      return {
+        success: false,
+      };
+    }
+  }
+
   @Post(':id/like')
-  like(@Param('id') id: number): Promise<any> {
-    return this.postService.addLike(id);
+  like(@Param('id') id: string): any {
+    try {
+      this.postService.addLike(id);
+      return {
+        success: true,
+      };
+    } catch (e) {
+      return {
+        success: false,
+      };
+    }
   }
 
   @Delete(':id/like')
-  unlike(@Param('id') id: number): Promise<any> {
-    return this.postService.removeLike(id);
+  unlike(@Param('id') id: string): any {
+    try {
+      this.postService.deleteLike(id);
+      return {
+        success: true,
+      };
+    } catch (e) {
+      return {
+        success: false,
+      };
+    }
   }
 
   @Post(':id/comments')
   async addComment(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() createCommentDto: CreateCommentDto,
   ): Promise<any> {
     const data = await this.postService.createComment(
@@ -87,9 +120,18 @@ export class PostController {
 
   @Delete(':id/comments/:commentId')
   deleteComment(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Param('commentId') commentId: number,
-  ): Promise<any> {
-    return this.postService.removeComment(id, commentId);
+  ): any {
+    try {
+      this.postService.deleteComment(id, commentId);
+      return {
+        success: true,
+      };
+    } catch (e) {
+      return {
+        success: false,
+      };
+    }
   }
 }
