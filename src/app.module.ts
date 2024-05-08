@@ -18,7 +18,7 @@ import { PostModule } from './post/post.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [Post, Comment],
-      // synchronize: true,
+      synchronize: true,
     }),
     PostModule,
   ],
