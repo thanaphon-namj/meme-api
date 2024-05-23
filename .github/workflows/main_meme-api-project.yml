@@ -14,32 +14,24 @@ jobs:
     runs-on: 'ubuntu-latest'
 
     steps:
-      - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-      - name: Log in to registry
-        uses: docker/login-action@v2
-        with:
-          registry: https://index.docker.io/v1/
-          username: ${{ secrets.AzureAppService_ContainerUsername_12804a4e37ee4471b2cc1469ad6635f8 }}
-          password: ${{ secrets.AzureAppService_ContainerPassword_f8f7d5e577f34a36923de1c53d210e87 }}
+    - name: Log in to registry
+      uses: docker/login-action@v2
+      with:
+        registry: https://index.docker.io/v1/
+        username: ${{ secrets.AzureAppService_ContainerUsername_b05da767adb448d2b09050970d3ab1b0 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_379b4852de6546b7ba5d255f2c737683 }}
 
-      - name: Build and push container image to registry
-        uses: docker/build-push-action@v3
-        with:
-          push: true
-          tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_12804a4e37ee4471b2cc1469ad6635f8 }}/meme-api:${{ github.sha }}
-          file: ./Dockerfile
-          build-args: |
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_DATABASE=${{ secrets.DB_DATABASE }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-            AZURE_STORAGE_CONTAINER_NAME=${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
+    - name: Build and push container image to registry
+      uses: docker/build-push-action@v3
+      with:
+        push: true
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_b05da767adb448d2b09050970d3ab1b0 }}/meme-api:${{ github.sha }}
+        file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -49,11 +41,11 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: 'meme-api-project'
-          slot-name: 'production'
-          publish-profile: ${{ secrets.AzureAppService_PublishProfile_acd5a6eb994747fab3e1ca6561d94a3f }}
-          images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_12804a4e37ee4471b2cc1469ad6635f8 }}/meme-api:${{ github.sha }}'
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'meme-api-project'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_7de1010bf3904a31ae7d37b55f670e1f }}
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_b05da767adb448d2b09050970d3ab1b0 }}/meme-api:${{ github.sha }}'
